@@ -1,34 +1,59 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Use Render's dynamic port
 
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON requests
 
-// Function to fetch response from a .txt file
-const getResponse = (question) => {
-    const sanitizedQuestion = question.replace(/[^a-zA-Z0-9 ]/g, "").toLowerCase();
-    const filePath = path.join(__dirname, "responses", `${sanitizedQuestion}.txt`);
-    
-    if (fs.existsSync(filePath)) {
-        return fs.readFileSync(filePath, "utf-8");
-    } else {
-        return "Sorry, I don't have an answer for that.";
+// Root route test
+app.get("/", (req, res) => {
+  res.send("Backend is running successfully!");
+});
+
+// Chatbot endpoint
+app.post("/chatbot", (req, res) => {
+  const { message } = req.body;
+  res.json({ response: `You said: ${message}` }); // Basic response
+});
+
+// Listen on all network interfaces
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Chatbot API is running on port ${PORT}`);
+});
+
+
+// script.js
+const backendUrl = "https://your-backend-service.onrender.com"; // Replace with your Render URL
+
+document.getElementById("sendButton").addEventListener("click", sendMessage);
+
+async function sendMessage() {
+    const userInput = document.getElementById("userInput").value;
+    if (!userInput.trim()) return;
+
+    // Display user message
+    const chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<div class="user-message">${userInput}</div>`;
+
+    try {
+        const response = await fetch(`${backendUrl}/chatbot`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userInput })
+        });
+
+        const data = await response.json();
+        
+        // Display bot response
+        chatbox.innerHTML += `<div class="bot-message">${data.response}</div>`;
+
+    } catch (error) {
+        console.error("Error:", error);
+        chatbox.innerHTML += `<div class="bot-message">Error: Backend not reachable</div>`;
     }
-};
 
-// Chatbot API Endpoint
-app.post("/chat", (req, res) => {
-    const userMessage = req.body.message.trim();
-    const botResponse = getResponse(userMessage);
-    res.json({ response: botResponse });
-});
-
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Chatbot API is running on http://localhost:${PORT}`);
-});
+    document.getElementById("userInput").value = ""; // Clear input field
+}
