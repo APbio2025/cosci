@@ -1,36 +1,31 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const chatbox = document.getElementById("chatbox");
-    const userInput = document.getElementById("userInput");
+document.addEventListener("DOMContentLoaded", () => {
+    const messagesContainer = document.getElementById("messages");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
 
-    function sendMessage() {
-        let message = userInput.value.trim();
-        if (!message) return;
-
-        // Display user message
-        let userMessageDiv = document.createElement("div");
-        userMessageDiv.className = "user-message";
-        userMessageDiv.textContent = message;
-        chatbox.appendChild(userMessageDiv);
-        userInput.value = "";
-
-        // Fetch response from the chatbot API
-        fetch("http://localhost:3000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: message })
-        })
-        .then(response => response.json())
-        .then(data => {
-            let botMessageDiv = document.createElement("div");
-            botMessageDiv.className = "bot-message";
-            botMessageDiv.textContent = data.response;
-            chatbox.appendChild(botMessageDiv);
-        })
-        .catch(error => console.error("Error:", error));
+    function appendMessage(sender, text) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add(sender);
+        messageDiv.innerText = text;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    document.querySelector("button").addEventListener("click", sendMessage);
-    userInput.addEventListener("keypress", function(event) {
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (message === "") return;
+        
+        appendMessage("user", "You: " + message);
+        userInput.value = "";
+        
+        // Simulate bot response
+        setTimeout(() => {
+            appendMessage("bot", "Bot: I'm still learning! Please check the study resources.");
+        }, 1000);
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", (event) => {
         if (event.key === "Enter") sendMessage();
     });
 });
